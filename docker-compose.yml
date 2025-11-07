@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: recetas_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: recetas_db
+      MYSQL_USER: recetas_user
+      MYSQL_PASSWORD: recetas_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      # Persistencia de datos
+      - mysql_data:/var/lib/mysql
+      # Scripts de inicialización
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    networks:
+      - recetas-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicación Spring Boot (opcional, si se quiere dockerizar)
+  # app:
+  #   build: .
+  #   container_name: recetas_app
+  #   restart: always
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/recetas_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+  #     SPRING_DATASOURCE_USERNAME: recetas_user
+  #     SPRING_DATASOURCE_PASSWORD: recetas_pass
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   networks:
+  #     - recetas-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  recetas-network:
+    driver: bridge
+

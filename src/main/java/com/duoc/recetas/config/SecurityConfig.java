@@ -47,7 +47,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // URLs PÚBLICAS - Accesibles sin autenticación
                 .requestMatchers("/", "/home", "/index").permitAll()
-                .requestMatchers("/recetas/buscar").permitAll()
+                .requestMatchers("/buscar", "/recetas/buscar").permitAll()
                 .requestMatchers("/login", "/error").permitAll()
                 
                 // Recursos estáticos públicos

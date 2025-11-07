@@ -25,7 +25,7 @@ public class RecetasApplication {
         SpringApplication.run(RecetasApplication.class, args);
         System.out.println("\n============================================");
         System.out.println("✅ Aplicación iniciada correctamente");
-        System.out.println("🌐 Accede a: http://localhost:8080");
+        System.out.println("🌐 Accede a: http://localhost:8082");
         System.out.println("============================================\n");
     }
 }

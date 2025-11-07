@@ -45,14 +45,16 @@ public class RecetaController {
             @RequestParam(required = false) String dificultad,
             Model model) {
         
+        // Convertir strings vacíos a null para que la búsqueda funcione correctamente
+        nombre = (nombre != null && nombre.trim().isEmpty()) ? null : nombre;
+        tipoCocina = (tipoCocina != null && tipoCocina.trim().isEmpty()) ? null : tipoCocina;
+        paisOrigen = (paisOrigen != null && paisOrigen.trim().isEmpty()) ? null : paisOrigen;
+        dificultad = (dificultad != null && dificultad.trim().isEmpty()) ? null : dificultad;
+        
         List<Receta> recetas;
         
         // Si no se proporcionó ningún criterio de búsqueda, mostrar todas las recetas
-        if ((nombre == null || nombre.trim().isEmpty()) &&
-            (tipoCocina == null || tipoCocina.trim().isEmpty()) &&
-            (paisOrigen == null || paisOrigen.trim().isEmpty()) &&
-            (dificultad == null || dificultad.trim().isEmpty())) {
-            
+        if (nombre == null && tipoCocina == null && paisOrigen == null && dificultad == null) {
             recetas = recetaService.obtenerTodasLasRecetas();
         } else {
             // Buscar con los criterios proporcionados

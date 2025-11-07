@@ -54,9 +54,9 @@ Antes de ejecutar la aplicación, asegúrate de tener instalado:
    mvn -version
    ```
 
-3. **MySQL 8.0 o superior** (o usar H2 en memoria)
+3. **Docker Desktop** (Recomendado - forma más fácil)
    ```bash
-   mysql --version
+   docker --version
    ```
 
 4. **Git** (para clonar el repositorio)
@@ -78,9 +78,27 @@ cd sumativa_1_semana_3
 # O simplemente extraer el archivo ZIP en una carpeta
 ```
 
-### Paso 2: Configurar Base de Datos MySQL
+### Paso 2: Configurar Base de Datos
 
-#### Opción A: Usar MySQL
+#### 🐳 Opción A: Usar Docker Compose (⭐ RECOMENDADO)
+
+Esta es la forma más fácil y rápida. Todo está preconfigurado.
+
+```bash
+# 1. Iniciar MySQL con Docker
+./docker-start.sh
+
+# 2. Esperar 10-15 segundos a que MySQL esté listo
+
+# 3. Iniciar la aplicación
+mvn spring-boot:run -Dspring-boot.run.profiles=docker
+```
+
+**¡Listo!** La aplicación estará en `http://localhost:8082`
+
+📖 **Ver documentación completa:** [DOCKER_README.md](./DOCKER_README.md)
+
+#### Opción B: Usar MySQL Local
 
 1. **Iniciar MySQL:**
    ```bash
@@ -102,8 +120,6 @@ cd sumativa_1_semana_3
    source database/data.sql
    exit;
    ```
-   
-   O copiar y pegar el contenido de ambos archivos en MySQL Workbench.
 
 3. **Configurar credenciales:**
    
@@ -114,7 +130,7 @@ cd sumativa_1_semana_3
    spring.datasource.password=TU_CONTRASEÑA
    ```
 
-#### Opción B: Usar H2 (Base de datos en memoria - más rápido para pruebas)
+#### Opción C: Usar H2 (Base de datos en memoria)
 
 1. En `application.properties`, comentar MySQL y descomentar H2:
    ```properties
@@ -157,8 +173,12 @@ mvnw.cmd spring-boot:run  # Windows
 
 Abrir el navegador y visitar:
 ```
-http://localhost:8080
+http://localhost:8082
 ```
+
+**⚠️ IMPORTANTE:** La aplicación usa el puerto **8082** (NO 8080).
+- ✅ Correcto: `http://localhost:8082`
+- ❌ Incorrecto: `http://localhost:8080` (Apache de otro proyecto)
 
 ---
 
@@ -261,19 +281,19 @@ sumativa_1_semana_3/
 
 ### 1. Probar Páginas Públicas
 
-- Visita `http://localhost:8080` → Debe mostrar la página de inicio
-- Visita `http://localhost:8080/recetas/buscar` → Debe mostrar búsqueda
-- Intenta acceder a `http://localhost:8080/recetas/detalle/1` → Debe redirigir al login
+- Visita `http://localhost:8082` → Debe mostrar la página de inicio
+- Visita `http://localhost:8082/buscar` → Debe mostrar búsqueda
+- Intenta acceder a `http://localhost:8082/detalle/1` → Debe redirigir al login
 
 ### 2. Probar Autenticación
 
-- Ir a `http://localhost:8080/login`
+- Ir a `http://localhost:8082/login`
 - Ingresar: `admin` / `admin123`
 - Debe redirigir a la página de inicio con sesión iniciada
 
 ### 3. Probar Páginas Privadas
 
-- Con sesión iniciada, visita `http://localhost:8080/recetas/detalle/1`
+- Con sesión iniciada, visita `http://localhost:8082/detalle/1`
 - Debe mostrar el detalle de la receta
 
 ### 4. Probar Logout
@@ -301,7 +321,7 @@ sumativa_1_semana_3/
 
 1. **Escaneo Automático:**
    - En ZAP, ir a "Quick Start"
-   - URL: `http://localhost:8080`
+   - URL: `http://localhost:8082`
    - Click en "Attack"
 
 2. **Escaneo Manual:**
@@ -356,28 +376,57 @@ El informe debe incluir:
 
 ---
 
-## 🐳 Despliegue con Docker (Opcional)
+## 🐳 Docker - Infraestructura Completa
 
-### Crear Dockerfile
+Este proyecto incluye una configuración completa de Docker Compose que facilita el despliegue.
 
-```dockerfile
-FROM openjdk:17-jdk-slim
-COPY target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app.jar"]
+### 📦 Inicio Rápido con Docker
+
+```bash
+# 1. Iniciar base de datos MySQL
+./docker-start.sh
+
+# 2. Iniciar aplicación con perfil Docker
+mvn spring-boot:run -Dspring-boot.run.profiles=docker
+
+# Acceder a: http://localhost:8082
 ```
 
-### Construir y Ejecutar
+### 🔧 Comandos Disponibles
+
+```bash
+# Iniciar servicios
+./docker-start.sh
+
+# Detener servicios (mantiene datos)
+./docker-stop.sh
+
+# Resetear todo (elimina datos)
+./docker-reset.sh
+```
+
+### 📖 Documentación Completa
+
+Para información detallada sobre Docker, configuración, troubleshooting y más, consulta:
+
+**📄 [DOCKER_README.md](./DOCKER_README.md)**
+
+### 🚀 Dockerizar la Aplicación (Opcional)
+
+Si quieres ejecutar también la aplicación en Docker:
 
 ```bash
 # Compilar JAR
-mvn clean package
+mvn clean package -DskipTests
 
 # Construir imagen Docker
 docker build -t recetas-seguras .
 
-# Ejecutar contenedor
-docker run -p 8080:8080 recetas-seguras
+# La imagen ya está lista en docker-compose.yml
+# Descomenta la sección 'app' en docker-compose.yml
+
+# Ejecutar todo el stack
+docker-compose up -d
 ```
 
 ---
@@ -395,11 +444,14 @@ net start MySQL80  # Windows
 # Verificar credenciales en application.properties
 ```
 
-### Error: "Puerto 8080 en uso"
+### Error: "Puerto 8082 en uso"
 
 ```bash
+# Ver qué está usando el puerto
+lsof -i :8082
+
 # Cambiar puerto en application.properties
-server.port=8081
+server.port=8083
 ```
 
 ### Error: "Lombok no funciona"

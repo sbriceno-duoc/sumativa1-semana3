@@ -81,6 +81,18 @@ public class HomeController {
     }
 
     /**
+     * Redirección corta a la página de búsqueda.
+     * 
+     * Atajo: /buscar → /recetas/buscar
+     * 
+     * @return Redirección a /recetas/buscar
+     */
+    @GetMapping("/buscar")
+    public String buscarAtajo() {
+        return "redirect:/recetas/buscar";
+    }
+
+    /**
      * Manejo de errores personalizados.
      * 
      * @param model Modelo para pasar datos a la vista
