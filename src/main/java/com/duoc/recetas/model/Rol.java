@@ -1,6 +1,7 @@
 package com.duoc.recetas.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,8 +13,9 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "roles")
-@Data
-@NoArgsConstructor
+@Data //Genera getter & setter
+@NoArgsConstructor //Genera constructor vacío
+@AllArgsConstructor //Genera constructor poblado
 public class Rol {
 
     @Id
@@ -26,38 +28,4 @@ public class Rol {
      */
     @Column(nullable = false, unique = true, length = 50)
     private String nombre;
-
-    /**
-     * Constructor vacío requerido por JPA.
-     */
-    public Rol() {
-        // Constructor por defecto
-    }
-
-    /**
-     * Constructor para crear un rol con solo el nombre.
-     * 
-     * @param nombre Nombre del rol
-     */
-    public Rol(String nombre) {
-        this.nombre = nombre;
-    }
-
-    // Getters y Setters manuales (por si Lombok falla)
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
 }
-
