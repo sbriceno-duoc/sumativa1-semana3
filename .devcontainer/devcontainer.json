@@ -12,7 +12,9 @@
 	"extensions": [
 		"vmware.vscode-boot-dev-pack",
 		"Pleiades.java-extension-pack-jdk",
-		"Oracle.sql-developer"
+		"Oracle.sql-developer",
+		"redhat.fabric8-analytics",
+		"GitHub.copilot-chat"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
