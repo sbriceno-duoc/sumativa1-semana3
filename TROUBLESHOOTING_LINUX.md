@@ -145,11 +145,47 @@ Y elimina la sección de instalación de Maven.
 
 ## Otros errores comunes en Linux
 
+### Error: "docker-compose: orden no encontrada"
+
+Este error aparece porque Docker Compose v2 se ejecuta con `docker compose` (con espacio) en lugar de `docker-compose` (con guión).
+
+**Solución 1: Usar el script actualizado**
+```bash
+./docker-start-linux.sh
+# El script detecta automáticamente qué comando usar
+```
+
+**Solución 2: Instalar docker-compose standalone**
+```bash
+# Descargar la última versión
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+# Dar permisos de ejecución
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verificar instalación
+docker-compose --version
+```
+
+**Solución 3: Usar 'docker compose' directamente**
+```bash
+# En lugar de: docker-compose up -d
+# Usar: docker compose up -d
+docker compose up -d
+```
+
+**Solución 4: Crear un alias**
+```bash
+# Agregar al archivo ~/.bashrc o ~/.zshrc
+echo "alias docker-compose='docker compose'" >> ~/.bashrc
+source ~/.bashrc
+```
+
 ### Error: "permission denied" al ejecutar docker-compose
 
 ```bash
 # Opción 1: Usar sudo
-sudo docker-compose up -d
+sudo docker compose up -d
 
 # Opción 2: Agregar tu usuario al grupo docker (recomendado)
 sudo usermod -aG docker $USER

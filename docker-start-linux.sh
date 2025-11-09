@@ -14,14 +14,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Verificar que Docker Compose esté disponible
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    echo "❌ Error: Docker Compose no está disponible"
-    exit 1
-fi
-
 echo "✅ Docker está instalado y disponible"
-echo ""
 
 # Verificar conectividad a internet
 echo "🔍 Verificando conectividad..."
@@ -51,9 +44,23 @@ fi
 echo "✅ Conectividad verificada"
 echo ""
 
+# Detectar comando de docker-compose
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo "❌ Error: Docker Compose no está disponible"
+    echo "Instala Docker Compose siguiendo: https://docs.docker.com/compose/install/"
+    exit 1
+fi
+
+echo "✅ Usando: $DOCKER_COMPOSE"
+echo ""
+
 # Detener contenedores existentes si los hay
 echo "🛑 Deteniendo contenedores existentes..."
-docker-compose down 2>/dev/null || docker compose down 2>/dev/null
+$DOCKER_COMPOSE down 2>/dev/null
 echo ""
 
 # Limpiar caché de build si existe un argumento --clean
@@ -69,11 +76,11 @@ echo "   (Esto puede tomar varios minutos la primera vez)"
 echo ""
 
 # Intentar con network host primero (mejor para Linux)
-if docker-compose build --network=host 2>/dev/null || docker compose build --network=host 2>/dev/null; then
-    echo "✅ Build completado exitosamente"
+if $DOCKER_COMPOSE build --network=host 2>/dev/null; then
+    echo "✅ Build completado exitosamente con network=host"
 else
     echo "⚠️  Build con network=host falló, intentando método estándar..."
-    if ! docker-compose build || ! docker compose build; then
+    if ! $DOCKER_COMPOSE build; then
         echo ""
         echo "❌ Error al construir las imágenes"
         echo ""
@@ -89,7 +96,7 @@ fi
 # Iniciar los contenedores
 echo ""
 echo "🚀 Iniciando contenedores..."
-docker-compose up -d || docker compose up -d
+$DOCKER_COMPOSE up -d
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -136,16 +143,16 @@ if [ $? -eq 0 ]; then
     fi
     
     echo "📝 Comandos útiles:"
-    echo "   Ver logs: docker-compose logs -f"
+    echo "   Ver logs: $DOCKER_COMPOSE logs -f"
     echo "   Ver logs de app: docker logs -f recetas_app"
     echo "   Ver logs de MySQL: docker logs -f recetas_mysql"
-    echo "   Detener servicios: ./docker-stop.sh"
+    echo "   Detener servicios: $DOCKER_COMPOSE down"
     echo ""
     echo "=========================================="
 else
     echo ""
     echo "❌ Error al iniciar los servicios"
-    echo "Verifica los logs con: docker-compose logs"
+    echo "Verifica los logs con: $DOCKER_COMPOSE logs"
     echo "O consulta: TROUBLESHOOTING_LINUX.md"
     exit 1
 fi
