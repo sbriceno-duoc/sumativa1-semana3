@@ -75,22 +75,52 @@ echo "🚀 Construyendo e iniciando servicios..."
 echo "   (Esto puede tomar varios minutos la primera vez)"
 echo ""
 
-# Intentar con network host primero (mejor para Linux)
-if $DOCKER_COMPOSE build --network=host 2>/dev/null; then
-    echo "✅ Build completado exitosamente con network=host"
-else
-    echo "⚠️  Build con network=host falló, intentando método estándar..."
-    if ! $DOCKER_COMPOSE build; then
-        echo ""
-        echo "❌ Error al construir las imágenes"
-        echo ""
-        echo "Posibles soluciones:"
-        echo "1. Verifica tu conexión a internet"
-        echo "2. Configura DNS en Docker (ver TROUBLESHOOTING_LINUX.md)"
-        echo "3. Ejecuta: sudo systemctl restart docker"
-        echo "4. Intenta con: ./docker-start-linux.sh --clean"
-        exit 1
+# Intentar diferentes estrategias de build
+BUILD_SUCCESS=false
+
+# Estrategia 1: Build con network=host y DNS personalizados
+echo "Intentando build con network=host..."
+if DOCKER_BUILDKIT=1 $DOCKER_COMPOSE build \
+    --build-arg BUILDKIT_INLINE_CACHE=1 \
+    --network=host 2>/dev/null; then
+    echo "✅ Build completado con network=host"
+    BUILD_SUCCESS=true
+fi
+
+# Estrategia 2: Build estándar
+if [ "$BUILD_SUCCESS" = false ]; then
+    echo "⚠️  Intentando build estándar..."
+    if DOCKER_BUILDKIT=1 $DOCKER_COMPOSE build --build-arg BUILDKIT_INLINE_CACHE=1 2>/dev/null; then
+        echo "✅ Build completado con método estándar"
+        BUILD_SUCCESS=true
     fi
+fi
+
+# Estrategia 3: Build con docker directamente usando DNS
+if [ "$BUILD_SUCCESS" = false ]; then
+    echo "⚠️  Intentando con configuración DNS explícita..."
+    if docker build --network=host \
+        --dns 8.8.8.8 \
+        --dns 8.8.4.4 \
+        -t sumativa1-semana3-app \
+        -f Dockerfile . 2>/dev/null; then
+        echo "✅ Build completado con DNS explícito"
+        BUILD_SUCCESS=true
+    fi
+fi
+
+if [ "$BUILD_SUCCESS" = false ]; then
+    echo ""
+    echo "❌ Error al construir las imágenes"
+    echo ""
+    echo "Posibles soluciones:"
+    echo "1. Verifica tu conexión a internet: ping 8.8.8.8"
+    echo "2. Configura DNS en Docker daemon.json:"
+    echo "   sudo nano /etc/docker/daemon.json"
+    echo "   Agrega: {\"dns\": [\"8.8.8.8\", \"8.8.4.4\"]}"
+    echo "3. Reinicia Docker: sudo systemctl restart docker"
+    echo "4. Ver guía completa: cat TROUBLESHOOTING_LINUX.md"
+    exit 1
 fi
 
 # Iniciar los contenedores

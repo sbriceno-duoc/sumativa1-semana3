@@ -8,17 +8,22 @@ WORKDIR /app
 # Instalar Maven (última versión)
 ARG MAVEN_VERSION=3.9.9
 
-# Configurar DNS y instalar Maven con reintentos
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf && \
-    apt-get update && \
-    apt-get install -y wget curl && \
-    for i in 1 2 3; do \
-        wget --timeout=30 --tries=3 https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -P /tmp && break || sleep 5; \
-    done && \
+# Instalar dependencias y Maven con múltiples reintentos y mirrors alternativos
+RUN apt-get update && \
+    apt-get install -y wget curl ca-certificates && \
+    update-ca-certificates && \
+    (wget --timeout=30 --tries=3 --dns-timeout=10 \
+        https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -P /tmp || \
+     wget --timeout=30 --tries=3 --dns-timeout=10 \
+        https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -P /tmp || \
+     curl -L --max-time 60 --retry 3 --retry-delay 5 \
+        https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -o /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz) && \
     tar xf /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt && \
     ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
-    rm /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz
+    rm -f /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz
 
 ENV M2_HOME=/opt/maven
 ENV MAVEN_HOME=/opt/maven
