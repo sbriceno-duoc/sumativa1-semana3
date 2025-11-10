@@ -1,13 +1,36 @@
 # Dockerfile para la aplicación Spring Boot
 # Este archivo es opcional y permite dockerizar también la aplicación
 
-# Etapa 1: Build con Maven
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
+# Etapa 1: Build con Maven y Java 21
+FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye AS build
 WORKDIR /app
+
+# Instalar Maven (última versión)
+ARG MAVEN_VERSION=3.9.9
+
+# Instalar dependencias y Maven con múltiples reintentos y mirrors alternativos
+RUN apt-get update && \
+    apt-get install -y wget curl ca-certificates && \
+    update-ca-certificates && \
+    (wget --timeout=30 --tries=3 --dns-timeout=10 \
+        https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -P /tmp || \
+     wget --timeout=30 --tries=3 --dns-timeout=10 \
+        https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -P /tmp || \
+     curl -L --max-time 60 --retry 3 --retry-delay 5 \
+        https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        -o /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz) && \
+    tar xf /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt && \
+    ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
+    rm -f /tmp/apache-maven-${MAVEN_VERSION}-bin.tar.gz
+
+ENV M2_HOME=/opt/maven
+ENV MAVEN_HOME=/opt/maven
+ENV PATH=${M2_HOME}/bin:${PATH}
 
 # Copiar archivos de configuración Maven
 COPY pom.xml .
-COPY .mvn .mvn
 
 # Descargar dependencias (se cachea esta capa)
 RUN mvn dependency:go-offline -B
@@ -18,12 +41,12 @@ COPY src ./src
 # Compilar la aplicación
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+# Etapa 2: Runtime con Java 21
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Crear usuario no-root para ejecutar la aplicación
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Copiar el JAR desde la etapa de build
@@ -38,7 +61,7 @@ ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1
+  CMD curl -f http://localhost:8082/actuator/health || exit 1
 
 # Punto de entrada
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

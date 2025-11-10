@@ -6,6 +6,7 @@ com/duoc/recetas/controller/HomeController.class
 com/duoc/recetas/model/Rol.class
 com/duoc/recetas/service/UserDetailsServiceImpl.class
 com/duoc/recetas/model/Usuario.class
+com/duoc/recetas/config/SecurityHeadersFilter.class
 com/duoc/recetas/util/PasswordGenerator.class
 com/duoc/recetas/config/DataInitializer.class
 com/duoc/recetas/RecetasApplication.class
