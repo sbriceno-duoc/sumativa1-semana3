@@ -1,25 +1,28 @@
 package com.duoc.recetas.service;
 
-import com.duoc.recetas.model.Receta;
-import com.duoc.recetas.repository.RecetaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.duoc.recetas.model.Receta;
+import com.duoc.recetas.repository.RecetaRepository;
+
 /**
  * Servicio para la lógica de negocio de Recetas.
- * 
+ *
  * Proporciona métodos para buscar, crear y gestionar recetas.
  */
 @Service
 @Transactional
 public class RecetaService {
 
-    @Autowired
-    private RecetaRepository recetaRepository;
+    private final RecetaRepository recetaRepository;
+
+    public RecetaService(RecetaRepository recetaRepository) {
+        this.recetaRepository = recetaRepository;
+    }
 
     /**
      * Obtiene todas las recetas.
@@ -41,21 +44,18 @@ public class RecetaService {
     }
 
     /**
-     * Obtiene las recetas populares.
-     * 
-     * @return Lista de recetas populares
+     * Obtiene las 3 recetas más populares por valoración promedio.
      */
     public List<Receta> obtenerRecetasPopulares() {
-        return recetaRepository.findByPopularTrue();
+        List<Receta> populares = recetaRepository.findTopRecetasByValoracionDesc();
+        return populares.size() > 3 ? populares.subList(0, 3) : populares;
     }
 
     /**
-     * Obtiene las recetas recientes.
-     * 
-     * @return Lista de recetas recientes
+     * Obtiene las 3 recetas más recientes por fecha de creación.
      */
     public List<Receta> obtenerRecetasRecientes() {
-        return recetaRepository.findByRecienteTrue();
+        return recetaRepository.findTop3ByOrderByFechaCreacionDesc();
     }
 
     /**
@@ -93,6 +93,23 @@ public class RecetaService {
             receta.setVisualizaciones(receta.getVisualizaciones() + 1);
             recetaRepository.save(receta);
         });
+    }
+    /**
+     * Elimina una receta solo si el usuario es el autor.
+     * @param recetaId ID de la receta
+     * @param usuario Usuario autenticado
+     * @return true si se eliminó, false si no es el autor
+     */
+    public boolean eliminarRecetaPorAutor(Long recetaId, com.duoc.recetas.model.Usuario usuario) {
+        java.util.Optional<com.duoc.recetas.model.Receta> recetaOpt = recetaRepository.findById(recetaId);
+        if (recetaOpt.isPresent()) {
+            com.duoc.recetas.model.Receta receta = recetaOpt.get();
+            if (receta.getAutor() != null && receta.getAutor().getId().equals(usuario.getId())) {
+                recetaRepository.deleteById(recetaId);
+                return true;
+            }
+        }
+        return false;
     }
 }
 
