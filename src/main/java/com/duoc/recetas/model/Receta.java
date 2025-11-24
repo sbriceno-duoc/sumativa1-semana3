@@ -1,14 +1,27 @@
 package com.duoc.recetas.model;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * Entidad que representa una receta de cocina.
@@ -54,12 +67,12 @@ public class Receta {
     private String dificultad;
 
     /**
-     * Tiempo de cocción en minutos.
+     * Tiempo de preparación en minutos.
      */
-    @NotNull(message = "El tiempo de cocción es obligatorio")
+    @NotNull(message = "El tiempo de preparación es obligatorio")
     @Positive(message = "El tiempo debe ser positivo")
     @Column(nullable = false)
-    private Integer tiempoCoccion;
+    private Integer tiempoPreparacion;
 
     /**
      * Lista de ingredientes necesarios (texto largo).
@@ -74,10 +87,16 @@ public class Receta {
     private String instrucciones;
 
     /**
-     * URL de la fotografía de la receta.
+     * URL de la fotografía o video de la receta.
      */
     @Column(length = 255)
     private String fotoUrl;
+    
+    /**
+     * Tipo de media: "image" o "video".
+     */
+    @Column(length = 10)
+    private String mediaType = "image";
 
     /**
      * Descripción corta de la receta.
@@ -114,6 +133,19 @@ public class Receta {
      */
     @Column
     private Integer visualizaciones = 0;
+    
+    /**
+     * Usuario autor de la receta.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    private Usuario autor;
+
+    /**
+     * Archivos multimedia asociados a esta receta.
+     */
+    @OneToMany(mappedBy = "receta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<RecetaMedia> mediaFiles = new ArrayList<>();
 
     /**
      * Inicializa la fecha de creación antes de persistir.
