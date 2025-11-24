@@ -1,5 +1,7 @@
 package com.duoc.recetas.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
@@ -9,32 +11,51 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
  */
 public class PasswordGenerator {
 
+    private static final Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private static final String SEPARATOR = "===========================================";
+    private static final String DEFAULT_PLACEHOLDER = "set-a-strong-password";
+
     public static void main(String[] args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
         
-        System.out.println("===========================================");
-        System.out.println("GENERADOR DE CONTRASEÑAS BCRYPT");
-        System.out.println("===========================================\n");
+        logger.info(SEPARATOR);
+        logger.info("GENERADOR DE CONTRASEÑAS BCRYPT");
+        logger.info(SEPARATOR);
         
-        // Generar hashes para los usuarios de prueba
+        // Credenciales obtenidas desde variables de entorno para evitar valores fijos.
         String[] usuarios = {"admin", "usuario1", "usuario2", "chef"};
-        String[] passwords = {"admin123", "usuario123", "usuario456", "chef2025"};
+        String[] passwords = {
+            getEnvOrPlaceholder("ADMIN_PASSWORD"),
+            getEnvOrPlaceholder("DEFAULT_USER_PASSWORD"),
+            getEnvOrPlaceholder("USUARIO2_PASSWORD"),
+            getEnvOrPlaceholder("CHEF_PASSWORD")
+        };
         
         for (int i = 0; i < usuarios.length; i++) {
             String hash = encoder.encode(passwords[i]);
-            System.out.println("Usuario: " + usuarios[i]);
-            System.out.println("Contraseña: " + passwords[i]);
-            System.out.println("BCrypt Hash: " + hash);
-            System.out.println();
+            logger.info("Usuario: {}", usuarios[i]);
+            logger.info("Contraseña: {}", mask(passwords[i]));
+            logger.info("BCrypt Hash: {}", hash);
+            logger.info("");
             
             // SQL para actualizar
-            System.out.println("UPDATE usuarios SET password = '" + hash + "' WHERE username = '" + usuarios[i] + "';");
-            System.out.println();
+            logger.info("UPDATE usuarios SET password = '{}' WHERE username = '{}';", hash, usuarios[i]);
+            logger.info("");
         }
         
-        System.out.println("===========================================");
-        System.out.println("COPIA ESTOS COMANDOS SQL Y EJECÚTALOS EN LA BD");
-        System.out.println("===========================================");
+        logger.info(SEPARATOR);
+        logger.info("COPIA ESTOS COMANDOS SQL Y EJECÚTALOS EN LA BD");
+        logger.info(SEPARATOR);
+    }
+
+    private static String getEnvOrPlaceholder(String key) {
+        return java.util.Optional.ofNullable(System.getenv(key)).orElse(DEFAULT_PLACEHOLDER);
+    }
+
+    private static String mask(String value) {
+        if (value == null || value.isEmpty()) {
+            return "<empty>";
+        }
+        return "*".repeat(Math.min(4, value.length())) + "...";
     }
 }
-
