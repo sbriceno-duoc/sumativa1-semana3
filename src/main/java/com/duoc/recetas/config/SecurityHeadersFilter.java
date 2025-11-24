@@ -33,16 +33,7 @@ public class SecurityHeadersFilter implements Filter {
         
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         
-        httpResponse.setHeader("Content-Security-Policy", 
-            "default-src 'self'; " +
-            "script-src 'self'; " +
-            "style-src 'self'; " +
-            "img-src 'self' data: https://images.unsplash.com; " +
-            "font-src 'self'; " +
-            "connect-src 'self'; " +
-            "frame-ancestors 'none'; " +
-            "base-uri 'self'; " +
-            "form-action 'self'");
+        httpResponse.setHeader("Content-Security-Policy", SecurityPolicies.CONTENT_SECURITY_POLICY);
 
         // Solución: Falta encabezado X-Content-Type-Options (20)
         httpResponse.setHeader("X-Content-Type-Options", "nosniff");
@@ -51,11 +42,10 @@ public class SecurityHeadersFilter implements Filter {
         httpResponse.setHeader("X-Permitted-Cross-Domain-Policies", "none");
         
         // Referrer-Policy adicional
-        httpResponse.setHeader("Referrer-Policy", "no-referrer");
+        httpResponse.setHeader("Referrer-Policy", SecurityPolicies.REFERRER_POLICY);
         
         // Permissions-Policy (reemplazo de Feature-Policy)
-        httpResponse.setHeader("Permissions-Policy", 
-            "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
+        httpResponse.setHeader("Permissions-Policy", SecurityPolicies.EXTENDED_PERMISSIONS_POLICY);
         
         // X-Frame-Options adicional (por si no viene de Spring Security)
         if (httpResponse.getHeader("X-Frame-Options") == null) {
@@ -64,7 +54,7 @@ public class SecurityHeadersFilter implements Filter {
         
         // Cache-Control para páginas sensibles
         String requestURI = ((jakarta.servlet.http.HttpServletRequest) request).getRequestURI();
-        if (requestURI.contains("/login") || requestURI.contains("/recetas/detalle")) {
+        if (requestURI.contains(AppConstants.LOGIN_PATH) || requestURI.contains("/recetas/detalle")) {
             httpResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             httpResponse.setHeader("Pragma", "no-cache");
             httpResponse.setHeader("Expires", "0");
