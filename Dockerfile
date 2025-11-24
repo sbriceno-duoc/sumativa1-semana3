@@ -41,16 +41,42 @@ COPY src ./src
 # Compilar la aplicación
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Runtime con Java 21
-FROM eclipse-temurin:21-jre-jammy
+# Etapa 2: Runtime con Java 21 + Maven + SonarScanner
+FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 
-# Crear usuario no-root para ejecutar la aplicación
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring:spring
+USER root
+
+# Instalar Maven
+ARG MAVEN_VERSION=3.9.9
+RUN apt-get update && \
+    apt-get install -y wget curl unzip ca-certificates && \
+    wget -q https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz && \
+    tar xf /tmp/maven.tar.gz -C /opt && \
+    ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
+    rm -f /tmp/maven.tar.gz && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV M2_HOME=/opt/maven
+ENV MAVEN_HOME=/opt/maven
+ENV PATH=${M2_HOME}/bin:${PATH}
+
+# Crear usuario no-root
+RUN groupadd -r spring && useradd -r -g spring spring -m
 
 # Copiar el JAR desde la etapa de build
 COPY --from=build /app/target/*.jar app.jar
+
+# Copiar código fuente y pom.xml para análisis de SonarQube
+COPY --from=build /app/src ./src
+COPY --from=build /app/pom.xml ./pom.xml
+COPY --from=build /app/target ./target
+
+# Crear directorios y dar permisos
+RUN mkdir -p /home/spring/.m2 /.m2 /app/uploads && \
+    chown -R spring:spring /app /home/spring/.m2 /.m2 /app/uploads
+
+USER spring:spring
 
 # Puerto de la aplicación
 EXPOSE 8082
