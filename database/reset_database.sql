@@ -1,36 +1,55 @@
 -- ============================================
--- SCRIPT DE CREACIÓN DE BASE DE DATOS
+-- SCRIPT DE RESET COMPLETO DE BASE DE DATOS
 -- Aplicación: Recetas Seguras
--- OWASP Top 10 Compliant
+-- ============================================
+--
+-- Este script realiza un reset completo:
+-- 1. Elimina la base de datos existente
+-- 2. La recrea desde cero
+-- 3. Crea todas las tablas
+--
+-- ⚠️ ADVERTENCIA: Todos los datos existentes se perderán
+--
+-- Después de ejecutar este script, deberá ejecutar data.sql
+-- para insertar los datos iniciales.
 -- ============================================
 
--- Eliminar base de datos si existe (usar con precaución en producción)
--- DROP DATABASE IF EXISTS recetas_db;
+-- ============================================
+-- PASO 1: Eliminar base de datos existente
+-- ============================================
+DROP DATABASE IF EXISTS recetas_db;
 
--- Crear base de datos
-CREATE DATABASE IF NOT EXISTS recetas_db 
-CHARACTER SET utf8mb4 
+SELECT '✅ Base de datos anterior eliminada (si existía)' AS Paso1;
+
+-- ============================================
+-- PASO 2: Crear base de datos limpia
+-- ============================================
+CREATE DATABASE recetas_db
+CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
--- Usar la base de datos
+SELECT '✅ Base de datos recetas_db creada' AS Paso2;
+
+-- ============================================
+-- PASO 3: Seleccionar la base de datos
+-- ============================================
 USE recetas_db;
 
 -- ============================================
--- TABLA: roles
--- Almacena los roles del sistema
+-- PASO 4: Crear estructura de tablas
 -- ============================================
-CREATE TABLE IF NOT EXISTS roles (
+
+-- Tabla: roles
+CREATE TABLE roles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
     CONSTRAINT chk_rol_nombre CHECK (nombre LIKE 'ROLE_%')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: usuarios
--- Almacena información de usuarios del sistema
--- SEGURIDAD: Las contraseñas DEBEN estar encriptadas con BCrypt
--- ============================================
-CREATE TABLE IF NOT EXISTS usuarios (
+SELECT '✅ Tabla roles creada' AS Paso3;
+
+-- Tabla: usuarios
+CREATE TABLE usuarios (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -42,11 +61,10 @@ CREATE TABLE IF NOT EXISTS usuarios (
     INDEX idx_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: usuarios_roles
--- Tabla de relación muchos a muchos entre usuarios y roles
--- ============================================
-CREATE TABLE IF NOT EXISTS usuarios_roles (
+SELECT '✅ Tabla usuarios creada' AS Paso4;
+
+-- Tabla: usuarios_roles
+CREATE TABLE usuarios_roles (
     usuario_id BIGINT NOT NULL,
     rol_id BIGINT NOT NULL,
     PRIMARY KEY (usuario_id, rol_id),
@@ -54,11 +72,10 @@ CREATE TABLE IF NOT EXISTS usuarios_roles (
     FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: recetas
--- Almacena la información de las recetas
--- ============================================
-CREATE TABLE IF NOT EXISTS recetas (
+SELECT '✅ Tabla usuarios_roles creada' AS Paso5;
+
+-- Tabla: recetas
+CREATE TABLE recetas (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     tipo_cocina VARCHAR(50),
@@ -87,11 +104,10 @@ CREATE TABLE IF NOT EXISTS recetas (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: comentarios
--- Almacena comentarios de usuarios en recetas
--- ============================================
-CREATE TABLE IF NOT EXISTS comentarios (
+SELECT '✅ Tabla recetas creada' AS Paso6;
+
+-- Tabla: comentarios
+CREATE TABLE comentarios (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     receta_id BIGINT NOT NULL,
     usuario_id BIGINT NOT NULL,
@@ -104,11 +120,10 @@ CREATE TABLE IF NOT EXISTS comentarios (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: valoraciones
--- Almacena valoraciones (1-5 estrellas) de usuarios en recetas
--- ============================================
-CREATE TABLE IF NOT EXISTS valoraciones (
+SELECT '✅ Tabla comentarios creada' AS Paso7;
+
+-- Tabla: valoraciones
+CREATE TABLE valoraciones (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     receta_id BIGINT NOT NULL,
     usuario_id BIGINT NOT NULL,
@@ -122,11 +137,10 @@ CREATE TABLE IF NOT EXISTS valoraciones (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- TABLA: recetas_media
--- Almacena múltiples archivos multimedia (imágenes/videos) por receta
--- ============================================
-CREATE TABLE IF NOT EXISTS recetas_media (
+SELECT '✅ Tabla valoraciones creada' AS Paso8;
+
+-- Tabla: recetas_media
+CREATE TABLE recetas_media (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     receta_id BIGINT NOT NULL,
     media_url VARCHAR(255) NOT NULL,
@@ -136,28 +150,28 @@ CREATE TABLE IF NOT EXISTS recetas_media (
     CHECK (media_type IN ('image', 'video'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+SELECT '✅ Tabla recetas_media creada' AS Paso9;
+
 -- ============================================
--- ÍNDICES ADICIONALES PARA OPTIMIZACIÓN
+-- PASO 5: Crear índices adicionales
 -- ============================================
 
--- Índice compuesto para búsquedas frecuentes
 CREATE INDEX idx_busqueda_compuesta ON recetas(tipo_cocina, pais_origen, dificultad);
-
--- Índice para ordenamiento por fecha
 CREATE INDEX idx_fecha_creacion ON recetas(fecha_creacion DESC);
 
+SELECT '✅ Índices adicionales creados' AS Paso10;
+
 -- ============================================
--- VISTAS (Opcional - para consultas frecuentes)
+-- PASO 6: Crear vistas
 -- ============================================
 
--- Vista de recetas populares
 CREATE OR REPLACE VIEW vista_recetas_populares AS
-SELECT 
-    id, 
-    nombre, 
-    tipo_cocina, 
-    pais_origen, 
-    dificultad, 
+SELECT
+    id,
+    nombre,
+    tipo_cocina,
+    pais_origen,
+    dificultad,
     tiempo_preparacion,
     visualizaciones,
     foto_url
@@ -165,14 +179,13 @@ FROM recetas
 WHERE popular = TRUE
 ORDER BY visualizaciones DESC;
 
--- Vista de recetas recientes
 CREATE OR REPLACE VIEW vista_recetas_recientes AS
-SELECT 
-    id, 
-    nombre, 
-    tipo_cocina, 
-    pais_origen, 
-    dificultad, 
+SELECT
+    id,
+    nombre,
+    tipo_cocina,
+    pais_origen,
+    dificultad,
     tiempo_preparacion,
     fecha_creacion,
     foto_url
@@ -180,12 +193,58 @@ FROM recetas
 WHERE reciente = TRUE
 ORDER BY fecha_creacion DESC;
 
+SELECT '✅ Vistas creadas' AS Paso11;
+
 -- ============================================
--- INFORMACIÓN DEL ESQUEMA
+-- PASO 7: Verificación final
 -- ============================================
 
-SELECT 'Base de datos creada exitosamente' AS Mensaje;
-SELECT TABLE_NAME, TABLE_ROWS, TABLE_COMMENT 
-FROM information_schema.TABLES 
-WHERE TABLE_SCHEMA = 'recetas_db';
+SELECT '========================================' AS Separador;
+SELECT '✅ RESET COMPLETADO EXITOSAMENTE' AS Resultado;
+SELECT '========================================' AS Separador;
 
+SELECT
+    CONCAT('✅ Base de datos "', SCHEMA_NAME, '" lista para usar') AS Estado,
+    DEFAULT_CHARACTER_SET_NAME AS Charset,
+    DEFAULT_COLLATION_NAME AS Collation
+FROM information_schema.SCHEMATA
+WHERE SCHEMA_NAME = 'recetas_db';
+
+SELECT '--- Tablas creadas ---' AS Info;
+SELECT TABLE_NAME AS Tabla, TABLE_ROWS AS Filas
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = 'recetas_db'
+AND TABLE_TYPE = 'BASE TABLE'
+ORDER BY TABLE_NAME;
+
+SELECT '--- Vistas creadas ---' AS Info;
+SELECT TABLE_NAME AS Vista
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = 'recetas_db'
+AND TABLE_TYPE = 'VIEW'
+ORDER BY TABLE_NAME;
+
+-- ============================================
+-- PRÓXIMO PASO:
+-- ============================================
+
+SELECT '========================================' AS Separador;
+SELECT '📝 Próximo paso: Insertar datos iniciales' AS Instruccion;
+SELECT 'Ejecute: mysql -uroot -p recetas_db < database/data.sql' AS Comando;
+SELECT '========================================' AS Separador;
+
+-- ============================================
+-- INSTRUCCIONES DE USO:
+-- ============================================
+--
+-- 1. Para ejecutar este reset completo:
+--    mysql -uroot -p < database/reset_database.sql
+--
+-- 2. Luego insertar datos de prueba:
+--    mysql -uroot -p recetas_db < database/data.sql
+--
+-- 3. Con Docker (reset completo):
+--    docker exec -i recetas_mysql mysql -uroot -proot_password < database/reset_database.sql
+--    docker exec -i recetas_mysql mysql -uroot -proot_password recetas_db < database/data.sql
+--
+-- ============================================
