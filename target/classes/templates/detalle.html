@@ -22,11 +22,13 @@
                     <a th:href="@{/}" class="nav-link">Inicio</a>
                     <a th:href="@{/recetas/buscar}" class="nav-link">Buscar Recetas</a>
                     
-                    <div sec:authorize="isAuthenticated()" class="user-menu">
-                        <span class="user-name">Hola, <span sec:authentication="name">Usuario</span>!</span>
-                        <form th:action="@{/logout}" method="post" class="logout-form">
+                    <!-- Mostrar si el usuario está autenticado -->
+                    <div sec:authorize="isAuthenticated()" class="user-menu-simple">
+                        <span class="user-greeting">Hola, <span sec:authentication="name">Usuario</span>!</span>
+                        <a th:href="@{/recetas/publicar}" class="nav-link">Publicar Receta</a>
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn-logout">Cerrar Sesión</button>
+                            <button type="submit" class="nav-link logout-btn">Cerrar Sesión</button>
                         </form>
                     </div>
                 </nav>
@@ -51,6 +53,10 @@
                 <div class="receta-header">
                     <h1 th:text="${receta.nombre}">Nombre de la Receta</h1>
                     
+                    <p class="receta-autor-detalle" th:if="${receta.autor != null}">
+                        👨‍🍳 Publicado por: <strong th:text="${receta.autor.nombreCompleto}">Autor</strong>
+                    </p>
+                    
                     <div class="receta-meta-info">
                         <span class="badge-large" th:text="${receta.dificultad}">Dificultad</span>
                         <span class="meta-item">📍 <span th:text="${receta.paisOrigen}">País</span></span>
@@ -59,11 +65,66 @@
                     </div>
                 </div>
 
-                <!-- Imagen principal -->
-                <div class="receta-imagen-principal">
-                    <img th:src="${receta.fotoUrl}" 
-                         th:alt="${receta.nombre}"
-                         onerror="this.src='/images/default-recipe.jpg'">
+                <!-- Carrusel de imágenes y videos -->
+                <div class="receta-galeria">
+                    <!-- Verificar si hay archivos multimedia en la nueva estructura -->
+                    <div th:if="${receta.mediaFiles != null and !receta.mediaFiles.isEmpty()}" class="carousel-container">
+                        <div class="carousel">
+                            <div class="carousel-inner">
+                                <div th:each="mediaFile, iterStat : ${receta.mediaFiles}" 
+                                     class="carousel-item"
+                                     th:classappend="${iterStat.index == 0} ? 'active' : ''">
+                                    <!-- Mostrar video -->
+                                    <video th:if="${mediaFile.mediaType == 'video'}" 
+                                           th:src="${mediaFile.mediaUrl}" 
+                                           controls 
+                                           class="receta-video carousel-media">
+                                        Tu navegador no soporta el elemento de video.
+                                    </video>
+                                    
+                                    <!-- Mostrar imagen -->
+                                    <img th:if="${mediaFile.mediaType == 'image'}"
+                                         th:src="${mediaFile.mediaUrl}" 
+                                         th:alt="${receta.nombre}"
+                                         class="receta-imagen carousel-media"
+                                         onerror="this.src='/images/default-recipe.jpg'">
+                                </div>
+                            </div>
+                            
+                            <!-- Controles del carrusel -->
+                            <button class="carousel-control prev" id="carouselPrev" aria-label="Anterior">
+                                &#10094;
+                            </button>
+                            <button class="carousel-control next" id="carouselNext" aria-label="Siguiente">
+                                &#10095;
+                            </button>
+                            
+                            <!-- Indicadores -->
+                            <div class="carousel-indicators" id="carouselIndicators">
+                                <span th:each="mediaFile, iterStat : ${receta.mediaFiles}" 
+                                      class="indicator"
+                                      th:classappend="${iterStat.index == 0} ? 'active' : ''"
+                                      th:data-slide="${iterStat.index}"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fallback: Mostrar fotoUrl si no hay mediaFiles (compatibilidad con recetas antiguas) -->
+                    <div th:if="${(receta.mediaFiles == null or receta.mediaFiles.isEmpty()) and receta.fotoUrl != null}" class="receta-imagen-principal">
+                        <!-- Mostrar video si el tipo es video -->
+                        <video th:if="${receta.mediaType == 'video'}" 
+                               th:src="${receta.fotoUrl}" 
+                               controls 
+                               class="receta-video">
+                            Tu navegador no soporta el elemento de video.
+                        </video>
+                        
+                        <!-- Mostrar imagen si el tipo es image o no está definido -->
+                        <img th:if="${receta.mediaType == null or receta.mediaType == 'image'}"
+                             th:src="${receta.fotoUrl}" 
+                             th:alt="${receta.nombre}"
+                             onerror="this.src='/images/default-recipe.jpg'">
+                    </div>
                 </div>
 
                 <!-- Descripción -->
@@ -76,8 +137,8 @@
                     <div class="info-card">
                         <div class="info-icon">⏱️</div>
                         <div class="info-content">
-                            <h4>Tiempo de Cocción</h4>
-                            <p><span th:text="${receta.tiempoCoccion}">30</span> minutos</p>
+                            <h4>Tiempo de Preparación</h4>
+                            <p><span th:text="${receta.tiempoPreparacion}">30</span> minutos</p>
                         </div>
                     </div>
                     <div class="info-card">
@@ -136,10 +197,132 @@
                     </div>
                 </div>
 
+                <!-- Compartir en redes sociales -->
+                <div class="social-share">
+                    <h3>🔗 Compartir esta receta</h3>
+                    <div class="share-buttons">
+                        <button class="share-btn facebook" title="Compartir en Facebook">
+                            📘 Facebook
+                        </button>
+                        <button class="share-btn twitter" title="Compartir en Twitter">
+                            🐦 Twitter
+                        </button>
+                        <button class="share-btn whatsapp" title="Compartir en WhatsApp">
+                            💬 WhatsApp
+                        </button>
+                        <button class="share-btn pinterest" title="Compartir en Pinterest">
+                            📌 Pinterest
+                        </button>
+                        <button class="share-btn copy-link" title="Copiar enlace">
+                            🔗 Copiar enlace
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Valoraciones -->
+                <div class="valoraciones-section">
+                    <h3>⭐ Valoración de la Receta</h3>
+                    
+                    <div class="valoracion-promedio">
+                        <div class="stars-large">
+                            <span th:text="${#numbers.formatDecimal(promedioValoracion, 1, 1)}">0.0</span>
+                            <div class="stars">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}" 
+                                      th:class="${i <= promedioValoracion} ? 'star filled' : 'star'">★</span>
+                            </div>
+                            <p><span th:text="${totalValoraciones}">0</span> valoraciones</p>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de valoración -->
+                    <div class="valoracion-form">
+                        <h4>¿Qué te pareció esta receta?</h4>
+                        <form th:action="@{/recetas/detalle/{id}/valorar(id=${receta.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="estrellas" value="5" 
+                                       th:checked="${valoracionUsuario != null && valoracionUsuario.estrellas == 5}">
+                                <label for="star5" title="5 estrellas">★</label>
+                                
+                                <input type="radio" id="star4" name="estrellas" value="4"
+                                       th:checked="${valoracionUsuario != null && valoracionUsuario.estrellas == 4}">
+                                <label for="star4" title="4 estrellas">★</label>
+                                
+                                <input type="radio" id="star3" name="estrellas" value="3"
+                                       th:checked="${valoracionUsuario != null && valoracionUsuario.estrellas == 3}">
+                                <label for="star3" title="3 estrellas">★</label>
+                                
+                                <input type="radio" id="star2" name="estrellas" value="2"
+                                       th:checked="${valoracionUsuario != null && valoracionUsuario.estrellas == 2}">
+                                <label for="star2" title="2 estrellas">★</label>
+                                
+                                <input type="radio" id="star1" name="estrellas" value="1"
+                                       th:checked="${valoracionUsuario != null && valoracionUsuario.estrellas == 1}">
+                                <label for="star1" title="1 estrella">★</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Valorar</button>
+                        </form>
+                        <p th:if="${valoracionUsuario != null}" class="valoracion-actual">
+                            Tu valoración actual: <span th:text="${valoracionUsuario.estrellas}">0</span> estrellas
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Comentarios -->
+                <div class="comentarios-section">
+                    <h3>💬 Comentarios (<span th:text="${totalComentarios}">0</span>)</h3>
+                    
+                    <!-- Formulario para nuevo comentario -->
+                    <div class="nuevo-comentario">
+                        <h4>Deja tu comentario</h4>
+                        <form th:action="@{/recetas/detalle/{id}/comentario(id=${receta.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <textarea name="texto" rows="4" placeholder="Escribe tu comentario aquí..." 
+                                      required maxlength="1000"></textarea>
+                            <button type="submit" class="btn btn-primary">Publicar Comentario</button>
+                        </form>
+                    </div>
+
+                    <!-- Lista de comentarios -->
+                    <div class="comentarios-lista">
+                        <div th:if="${comentarios.isEmpty()}" class="no-comentarios">
+                            <p>Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+                        </div>
+                        
+                        <div th:each="comentario : ${comentarios}" class="comentario">
+                            <div class="comentario-header">
+                                <span class="comentario-autor" th:text="${comentario.usuario.username}">Usuario</span>
+                                <span class="comentario-fecha" 
+                                      th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                    01/01/2024 12:00
+                                </span>
+                            </div>
+                            <div class="comentario-texto">
+                                <p th:text="${comentario.texto}">Texto del comentario</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Acciones -->
                 <div class="receta-acciones">
-                    <a th:href="@{/recetas/buscar}" class="btn btn-secondary">← Volver a Búsqueda</a>
-                    <a th:href="@{/}" class="btn btn-secondary">🏠 Ir al Inicio</a>
+                    <a th:href="@{/recetas/buscar}" class="btn btn-secondary receta-btn-normal">← Volver a Búsqueda</a>
+                    <a th:href="@{/}" class="btn btn-secondary receta-btn-normal">🏠 Ir al Inicio</a>
+                    <!-- Botón eliminar solo para el autor -->
+                    <form th:if="${receta.autor != null} and ${#authentication.principal.username == receta.autor.username}" th:action="@{/recetas/detalle/{id}/eliminar(id=${receta.id})}" method="post" style="display:inline;" id="formEliminarReceta">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="button" class="btn btn-danger receta-btn-eliminar" id="btnEliminarReceta">Eliminar Receta</button>
+                        <!-- Modal de confirmación -->
+                        <div id="modalEliminar" class="modal-eliminar">
+                            <div class="modal-content-eliminar">
+                                <h3>¿Eliminar receta?</h3>
+                                <p>Esta acción no se puede deshacer.<br>¿Estás seguro?</p>
+                                <button type="submit" class="btn btn-danger receta-btn-eliminar-confirm">Sí, eliminar</button>
+                                <button type="button" class="btn btn-secondary receta-btn-cancelar" id="btnCancelarEliminar">Cancelar</button>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Estilos y scripts movidos a archivos externos para CSP -->
                 </div>
 
             </div>
@@ -159,6 +342,58 @@
             <p>Desarrollado con Spring Boot, Spring Security y Thymeleaf</p>
         </div>
     </footer>
+
+    <!-- Script para el dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dropdown script loaded');
+            const dropdown = document.querySelector('.dropdown');
+            const dropbtn = document.querySelector('.dropbtn');
+            
+            console.log('Dropdown element:', dropdown);
+            console.log('Dropbtn element:', dropbtn);
+            
+            if (dropdown && dropbtn) {
+                console.log('Dropdown elements found, attaching listeners');
+                
+                // Toggle dropdown al hacer click en el botón
+                dropbtn.addEventListener('click', function(e) {
+                    console.log('Dropdown button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                    console.log('Dropdown active state:', dropdown.classList.contains('active'));
+                });
+                
+                // Cerrar dropdown al hacer click fuera
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                        console.log('Dropdown closed by outside click');
+                    }
+                });
+                
+                // Cerrar dropdown al presionar Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        dropdown.classList.remove('active');
+                        console.log('Dropdown closed by ESC key');
+                    }
+                });
+            } else {
+                console.error('Dropdown elements not found!');
+            }
+        });
+    </script>
+
+    <!-- Script externo para el modal de eliminación (cumple con CSP) -->
+    <script th:src="@{/js/receta-modal.js}"></script>
+
+    <!-- Script externo para el carrusel (cumple con CSP) -->
+    <script th:src="@{/js/carousel.js}"></script>
+
+    <!-- Script externo para compartir en redes sociales (cumple con CSP) -->
+    <script th:src="@{/js/social-share.js}"></script>
 </body>
 </html>
 
