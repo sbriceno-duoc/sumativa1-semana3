@@ -1,3 +1,87 @@
+/* Botones de acciones receta */
+.receta-btn-normal {
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    margin: 0.5rem 0.3rem 0.5rem 0;
+    min-width: unset;
+    box-shadow: none;
+    display: inline-block;
+}
+
+.receta-btn-eliminar {
+    background: var(--error-color);
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    margin: 0.5rem 0.3rem 0.5rem 0;
+    min-width: unset;
+    box-shadow: none;
+    border: none;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+.receta-btn-eliminar:hover {
+    background: #b71c1c;
+}
+
+.receta-btn-eliminar-confirm {
+    background: var(--error-color);
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    margin-right: 1rem;
+    border: none;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+.receta-btn-eliminar-confirm:hover {
+    background: #b71c1c;
+}
+
+.receta-btn-cancelar {
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+.receta-btn-cancelar:hover {
+    background: #3DB8AF;
+}
+
+/* Modal de eliminación receta */
+.modal-eliminar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+.modal-eliminar.active {
+    display: flex !important;
+}
+.modal-content-eliminar {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 350px;
+    margin: auto;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+.modal-content-eliminar h3 {
+    color: var(--error-color);
+    margin-bottom: 1rem;
+}
 /**
  * ESTILOS GLOBALES - RECETAS SEGURAS
  * Aplicación web desarrollada con Spring Boot + Spring Security + Thymeleaf
@@ -336,6 +420,33 @@ main {
     margin-bottom: var(--spacing-sm);
 }
 
+.receta-autor {
+    color: #555;
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-sm);
+    font-style: italic;
+}
+
+.receta-autor span {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.receta-autor-detalle {
+    color: #555;
+    font-size: 1rem;
+    margin: var(--spacing-sm) 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 107, 107, 0.1);
+    border-left: 4px solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
+}
+
+.receta-autor-detalle strong {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
 .receta-details {
     display: flex;
     gap: var(--spacing-sm);
@@ -601,11 +712,186 @@ main {
     overflow: hidden;
     border-radius: var(--border-radius-lg);
     margin-bottom: var(--spacing-lg);
+    background-color: #000;
 }
 
 .receta-imagen-principal img {
     width: 100%;
     height: 100%;
+    object-fit: cover;
+}
+
+/* Carrusel de imágenes/videos */
+.receta-galeria {
+    margin-bottom: var(--spacing-lg);
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.carousel {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    background-color: #000;
+}
+
+.carousel-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-item {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: fadeIn 0.5s ease-in-out;
+    top: 0;
+    left: 0;
+}
+
+.carousel-item.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.carousel-media {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Solo imágenes del carrusel: contenidas y centradas */
+.carousel-media.receta-imagen {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+/* Los videos mantienen el estilo original */
+.carousel-media.receta-video {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    font-size: 1.8rem;
+    padding: 0;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-control:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-control.prev {
+    left: 20px;
+}
+
+.carousel-control.next {
+    right: 20px;
+}
+
+/* Responsive: ajustar tamaño en móviles */
+@media (max-width: 768px) {
+    .carousel {
+        height: 400px;
+    }
+
+    .carousel-control {
+        width: 35px;
+        height: 35px;
+        font-size: 1.3rem;
+    }
+
+    .carousel-control.prev {
+        left: 10px;
+    }
+
+    .carousel-control.next {
+        right: 10px;
+    }
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.carousel-indicators .indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.carousel-indicators .indicator:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+}
+
+.carousel-indicators .indicator.active {
+    background-color: white;
+    transform: scale(1.3);
+}
+
+.receta-video {
+    width: 100%;
+    max-height: 500px;
+    border-radius: var(--border-radius-lg);
+}
+
+.receta-card-video {
+    width: 100%;
+    height: 250px;
     object-fit: cover;
 }
 
@@ -835,4 +1121,435 @@ main {
 .mb-1 { margin-bottom: var(--spacing-sm); }
 .mb-2 { margin-bottom: var(--spacing-md); }
 .mb-3 { margin-bottom: var(--spacing-lg); }
+
+/* ========================================
+   DROPDOWN MENU
+   ======================================== */
+
+/* Menú de usuario simplificado */
+.user-menu-simple {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.user-greeting {
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+    background: rgba(231, 76, 60, 0.9);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logout-btn:hover {
+    background: rgba(192, 57, 43, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+}
+
+/* ========================================
+   FORMULARIO DE PUBLICAR RECETA
+   ======================================== */
+
+.publicar-section {
+    padding: var(--spacing-xl) 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: calc(100vh - 200px);
+}
+
+.publicar-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.publicar-header h1 {
+    color: var(--dark-color);
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.publicar-subtitle {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.publicar-form {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 1rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="file"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: var(--spacing-xs);
+    color: #666;
+    font-size: 14px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 2px solid var(--light-color);
+    justify-content: center;
+}
+
+.form-actions .btn {
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    min-width: 180px;
+}
+
+/* ========================================
+   COMPARTIR EN REDES SOCIALES
+   ======================================== */
+
+.social-share {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.social-share h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--dark-color);
+}
+
+.share-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+}
+
+.share-btn.facebook {
+    background-color: #1877F2;
+    color: white;
+}
+
+.share-btn.twitter {
+    background-color: #1DA1F2;
+    color: white;
+}
+
+.share-btn.whatsapp {
+    background-color: #25D366;
+    color: white;
+}
+
+.share-btn.pinterest {
+    background-color: #E60023;
+    color: white;
+}
+
+.share-btn.copy-link {
+    background-color: #6c757d;
+    color: white;
+}
+
+.share-btn.copy-link:hover {
+    background-color: #5a6268;
+}
+
+/* Notificación de compartir */
+.share-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    font-weight: 500;
+}
+
+.share-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.share-notification.error {
+    background-color: #dc3545;
+}
+
+/* ========================================
+   VALORACIONES
+   ======================================== */
+
+.valoraciones-section {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.valoraciones-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--dark-color);
+}
+
+.valoracion-promedio {
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.stars-large {
+    font-size: 24px;
+}
+
+.stars-large span:first-child {
+    display: block;
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stars {
+    margin: var(--spacing-xs) 0;
+}
+
+.star {
+    color: #ddd;
+    font-size: 24px;
+}
+
+.star.filled {
+    color: #FFD700;
+}
+
+.valoracion-form {
+    text-align: center;
+}
+
+.valoracion-form h4 {
+    margin-bottom: var(--spacing-md);
+}
+
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+    margin-bottom: var(--spacing-md);
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    cursor: pointer;
+    font-size: 40px;
+    color: #ddd;
+    transition: color 0.2s ease;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #FFD700;
+}
+
+.valoracion-actual {
+    margin-top: var(--spacing-md);
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+/* ========================================
+   COMENTARIOS
+   ======================================== */
+
+.comentarios-section {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.comentarios-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--dark-color);
+}
+
+.nuevo-comentario {
+    background: var(--light-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.nuevo-comentario h4 {
+    margin-bottom: var(--spacing-md);
+}
+
+.nuevo-comentario textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-family: inherit;
+    margin-bottom: var(--spacing-md);
+    resize: vertical;
+}
+
+.nuevo-comentario textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.comentarios-lista {
+    margin-top: var(--spacing-lg);
+}
+
+.no-comentarios {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: #666;
+}
+
+.comentario {
+    border-left: 4px solid var(--primary-color);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+}
+
+.comentario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.comentario-autor {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.comentario-fecha {
+    font-size: 14px;
+    color: #666;
+}
+
+.comentario-texto {
+    color: var(--dark-color);
+    line-height: 1.6;
+}
+
+/* ========================================
+   ALERTAS
+   ======================================== */
+
+.alert {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
 
