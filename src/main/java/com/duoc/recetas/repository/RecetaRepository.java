@@ -1,18 +1,30 @@
 package com.duoc.recetas.repository;
 
-import com.duoc.recetas.model.Receta;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.duoc.recetas.model.Receta;
 
 /**
  * Repositorio para operaciones de base de datos relacionadas con Receta.
  */
 @Repository
 public interface RecetaRepository extends JpaRepository<Receta, Long> {
+       /**
+        * Obtiene las recetas ordenadas por promedio de valoración (rating) descendente.
+        * Solo recetas con al menos una valoración.
+        */
+       @Query("SELECT r FROM Receta r JOIN Valoracion v ON v.receta = r GROUP BY r.id ORDER BY AVG(v.estrellas) DESC")
+       List<Receta> findTopRecetasByValoracionDesc();
+
+       /**
+        * Obtiene las recetas ordenadas por fecha de creación descendente.
+        */
+       List<Receta> findTop3ByOrderByFechaCreacionDesc();
 
     /**
      * Encuentra recetas marcadas como populares.

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Publica tu receta en Recetas Seguras">
+    <title th:text="${titulo}">Publicar Receta - Recetas Seguras</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🍳 Recetas Seguras</h1>
+                </div>
+                <nav class="nav">
+                    <a th:href="@{/}" class="nav-link">Inicio</a>
+                    <a th:href="@{/recetas/buscar}" class="nav-link">Buscar Recetas</a>
+                    
+                    <!-- Mostrar si el usuario está autenticado -->
+                    <div sec:authorize="isAuthenticated()" class="user-menu-simple">
+                        <span class="user-greeting">Hola, <span sec:authentication="name">Usuario</span>!</span>
+                        <a th:href="@{/recetas/publicar}" class="nav-link">Publicar Receta</a>
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="nav-link logout-btn">Cerrar Sesión</button>
+                        </form>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <!-- Sección de Publicar Receta -->
+    <section class="publicar-section">
+        <div class="container">
+            <div class="publicar-header">
+                <h1 th:text="${titulo}">Publicar Nueva Receta</h1>
+                <p class="publicar-subtitle">Comparte tu receta favorita con nuestra comunidad</p>
+            </div>
+            
+            <!-- Mensajes de éxito/error -->
+            <div th:if="${mensajeExito}" class="alert alert-success">
+                <p th:text="${mensajeExito}"></p>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-error">
+                <p th:text="${mensajeError}"></p>
+            </div>
+
+            <form th:action="@{/recetas/publicar}" method="post" enctype="multipart/form-data" class="publicar-form">
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre de la Receta *</label>
+                    <input type="text" id="nombre" name="nombre" required maxlength="200">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipoCocina">Tipo de Cocina *</label>
+                        <input type="text" id="tipoCocina" name="tipoCocina" required maxlength="100" 
+                               placeholder="Ej: Italiana, Mexicana, Japonesa">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paisOrigen">País de Origen *</label>
+                        <input type="text" id="paisOrigen" name="paisOrigen" required maxlength="100"
+                               placeholder="Ej: Italia, México, Japón">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dificultad">Dificultad *</label>
+                        <select id="dificultad" name="dificultad" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Fácil">Fácil</option>
+                            <option value="Media">Media</option>
+                            <option value="Difícil">Difícil</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tiempoPreparacion">Tiempo de Preparación (minutos) *</label>
+                        <input type="number" id="tiempoPreparacion" name="tiempoPreparacion" required min="1" max="1440">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="porciones">Porciones *</label>
+                        <input type="number" id="porciones" name="porciones" required min="1" max="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción Breve</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" maxlength="500" 
+                              placeholder="Una breve descripción de tu receta (opcional)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="ingredientes">Ingredientes *</label>
+                    <textarea id="ingredientes" name="ingredientes" rows="8" required 
+                              placeholder="Lista los ingredientes, uno por línea"></textarea>
+                    <small>Escribe cada ingrediente en una línea separada</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="instrucciones">Instrucciones de Preparación *</label>
+                    <textarea id="instrucciones" name="instrucciones" rows="10" required 
+                              placeholder="Describe paso a paso cómo preparar la receta"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="media">Imágenes o Videos de la Receta</label>
+                    <input type="file" id="media" name="media" accept="image/*,video/*" multiple>
+                    <small>Formatos aceptados: Imágenes (JPG, PNG, GIF, WebP) y Videos (MP4, WebM, OGG, MOV) - Puedes seleccionar varios archivos - Opcional</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Publicar Receta</button>
+                    <a th:href="@{/}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Recetas Seguras - Todos los derechos reservados</p>
+            <p>Desarrollado con Spring Boot, Spring Security y Thymeleaf</p>
+            <p class="security-badge">🔒 Aplicación segura siguiendo OWASP Top 10</p>
+        </div>
+    </footer>
+</body>
+</html>

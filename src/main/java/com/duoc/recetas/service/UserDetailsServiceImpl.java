@@ -2,7 +2,6 @@ package com.duoc.recetas.service;
 
 import com.duoc.recetas.model.Usuario;
 import com.duoc.recetas.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -17,15 +16,18 @@ import java.util.stream.Collectors;
 
 /**
  * Implementación de UserDetailsService para Spring Security.
- * 
+ *
  * Este servicio se encarga de cargar los datos del usuario desde la base de datos
  * para el proceso de autenticación de Spring Security.
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    public UserDetailsServiceImpl(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
     /**
      * Carga un usuario por su nombre de usuario.

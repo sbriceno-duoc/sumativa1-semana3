@@ -25,11 +25,13 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String LOGIN_URL = AppConstants.LOGIN_PATH;
+
     /**
      * Configura el filtro de seguridad para las peticiones HTTP.
-     * 
+     *
      * Define qué URLs son públicas y cuáles requieren autenticación.
-     * 
+     *
      * @param http Configurador de seguridad HTTP
      * @return SecurityFilterChain configurado
      * @throws Exception Si hay error en la configuración
@@ -42,24 +44,24 @@ public class SecurityConfig {
                 // URLs PÚBLICAS - Accesibles sin autenticación
                 .requestMatchers("/", "/home", "/index").permitAll()
                 .requestMatchers("/buscar", "/recetas/buscar").permitAll()
-                .requestMatchers("/login", "/error").permitAll()
-                
+                .requestMatchers(LOGIN_URL, "/error").permitAll()
+
                 // Recursos estáticos públicos
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/uploads/**").permitAll()
+
                 // URLs PRIVADAS - Requieren autenticación
-                .requestMatchers("/recetas/detalle/**").authenticated()
-                
+                .requestMatchers("/recetas/detalle/**", "/recetas/publicar/**").authenticated()
+
                 // Cualquier otra URL requiere autenticación
                 .anyRequest().authenticated()
             )
             
             // Configuración del formulario de login
             .formLogin(form -> form
-                .loginPage("/login")                    // Página de login personalizada
-                .loginProcessingUrl("/login")           // URL que procesa el login
+                .loginPage(LOGIN_URL)                   // Página de login personalizada
+                .loginProcessingUrl(LOGIN_URL)          // URL que procesa el login
                 .defaultSuccessUrl("/", true)           // Redirección después del login exitoso
-                .failureUrl("/login?error=true")        // Redirección si falla el login
+                .failureUrl(LOGIN_URL + "?error=true")  // Redirección si falla el login
                 .usernameParameter("username")          // Nombre del parámetro del usuario
                 .passwordParameter("password")          // Nombre del parámetro de la contraseña
                 .permitAll()
@@ -68,7 +70,7 @@ public class SecurityConfig {
             // Configuración del logout
             .logout(logout -> logout
                 .logoutUrl("/logout")                   // URL para hacer logout
-                .logoutSuccessUrl("/login?logout=true") // Redirección después del logout
+                .logoutSuccessUrl(LOGIN_URL + "?logout=true") // Redirección después del logout
                 .invalidateHttpSession(true)            // Invalida la sesión
                 .deleteCookies("JSESSIONID")            // Elimina cookies
                 .permitAll()
@@ -86,17 +88,7 @@ public class SecurityConfig {
 
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
-                    .policyDirectives(
-                        "default-src 'self'; " +
-                        "script-src 'self'; " +
-                        "style-src 'self'; " +
-                        "img-src 'self' data: https://images.unsplash.com; " +
-                        "font-src 'self'; " +
-                        "connect-src 'self'; " +
-                        "frame-ancestors 'none'; " +
-                        "base-uri 'self'; " +
-                        "form-action 'self'"
-                    )
+                    .policyDirectives(SecurityPolicies.CONTENT_SECURITY_POLICY)
                 )
 
                 // Previene MIME sniffing
@@ -112,7 +104,7 @@ public class SecurityConfig {
                 
                 // X-Permitted-Cross-Domain-Policies
                 .permissionsPolicy(permissions -> permissions
-                    .policy("geolocation=(), microphone=(), camera=()")
+                    .policy(SecurityPolicies.PERMISSIONS_POLICY)
                 )
             )
             

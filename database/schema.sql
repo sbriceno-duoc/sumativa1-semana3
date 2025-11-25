@@ -64,15 +64,17 @@ CREATE TABLE IF NOT EXISTS recetas (
     tipo_cocina VARCHAR(50),
     pais_origen VARCHAR(50),
     dificultad VARCHAR(20) NOT NULL,
-    tiempo_coccion INT NOT NULL,
+    tiempo_preparacion INT NOT NULL,
     ingredientes TEXT,
     instrucciones TEXT,
     foto_url VARCHAR(255),
+    media_type VARCHAR(10) DEFAULT 'image',
     descripcion VARCHAR(500),
     porciones INT,
     popular BOOLEAN NOT NULL DEFAULT FALSE,
     reciente BOOLEAN NOT NULL DEFAULT FALSE,
     visualizaciones INT DEFAULT 0,
+    usuario_id BIGINT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ultima_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_nombre (nombre),
@@ -80,9 +82,58 @@ CREATE TABLE IF NOT EXISTS recetas (
     INDEX idx_dificultad (dificultad),
     INDEX idx_popular (popular),
     INDEX idx_reciente (reciente),
-    CONSTRAINT chk_dificultad CHECK (dificultad IN ('Fácil', 'Intermedio', 'Difícil')),
-    CONSTRAINT chk_tiempo_coccion CHECK (tiempo_coccion > 0),
-    CONSTRAINT chk_porciones CHECK (porciones > 0 OR porciones IS NULL)
+    CONSTRAINT chk_porciones CHECK (porciones > 0 OR porciones IS NULL),
+    CONSTRAINT chk_tiempo_preparacion CHECK (tiempo_preparacion > 0),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: comentarios
+-- Almacena comentarios de usuarios en recetas
+-- ============================================
+CREATE TABLE IF NOT EXISTS comentarios (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    receta_id BIGINT NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    texto TEXT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_receta (receta_id),
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_fecha (fecha_creacion DESC),
+    FOREIGN KEY (receta_id) REFERENCES recetas(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: valoraciones
+-- Almacena valoraciones (1-5 estrellas) de usuarios en recetas
+-- ============================================
+CREATE TABLE IF NOT EXISTS valoraciones (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    receta_id BIGINT NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    estrellas INT NOT NULL,
+    fecha_valoracion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_receta (receta_id),
+    INDEX idx_usuario (usuario_id),
+    CHECK (estrellas BETWEEN 1 AND 5),
+    UNIQUE KEY unique_valoracion (receta_id, usuario_id),
+    FOREIGN KEY (receta_id) REFERENCES recetas(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: recetas_media
+-- Almacena múltiples archivos multimedia (imágenes/videos) por receta
+-- ============================================
+CREATE TABLE IF NOT EXISTS recetas_media (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    receta_id BIGINT NOT NULL,
+    media_url VARCHAR(255) NOT NULL,
+    media_type VARCHAR(10) NOT NULL DEFAULT 'image',
+    orden INT DEFAULT 0,
+    CONSTRAINT fk_recetas_media_receta FOREIGN KEY (receta_id) REFERENCES recetas(id) ON DELETE CASCADE,
+    CHECK (media_type IN ('image', 'video'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
@@ -107,7 +158,7 @@ SELECT
     tipo_cocina, 
     pais_origen, 
     dificultad, 
-    tiempo_coccion,
+    tiempo_preparacion,
     visualizaciones,
     foto_url
 FROM recetas
@@ -122,7 +173,7 @@ SELECT
     tipo_cocina, 
     pais_origen, 
     dificultad, 
-    tiempo_coccion,
+    tiempo_preparacion,
     fecha_creacion,
     foto_url
 FROM recetas

@@ -1,58 +1,68 @@
 package com.duoc.recetas.config;
 
 import com.duoc.recetas.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
  * Inicializador de datos para asegurar que los usuarios tengan contraseñas correctas.
- * 
+ *
  * Este componente se ejecuta al iniciar la aplicación y actualiza las contraseñas
  * de los usuarios existentes con hashes BCrypt correctos.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    private static final String DEFAULT_FALLBACK = "changeMe!123";
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public DataInitializer(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("\n========================================");
-        System.out.println("🔒 INICIALIZANDO CONTRASEÑAS DE USUARIOS");
-        System.out.println("========================================\n");
+        logger.info("========================================");
+        logger.info("INICIALIZANDO CONTRASEÑAS DE USUARIOS");
+        logger.info("========================================");
+
+        String adminPassword = getPasswordFromEnv(AppConstants.ENV_ADMIN_PASSWORD);
+        String userPassword = getPasswordFromEnv(AppConstants.ENV_DEFAULT_USER_PASSWORD);
 
         // Actualizar contraseña de admin
-        actualizarContraseña("admin", "admin123");
+        actualizarContrasena("admin", adminPassword);
 
         // Actualizar contraseñas de otros usuarios
-        actualizarContraseña("usuario1", "usuario123");
-        actualizarContraseña("usuario2", "usuario123");
-        actualizarContraseña("chef", "usuario123");
+        actualizarContrasena("usuario1", userPassword);
+        actualizarContrasena("usuario2", userPassword);
+        actualizarContrasena("chef", userPassword);
 
-        System.out.println("\n========================================");
-        System.out.println("✅ USUARIOS LISTOS PARA USAR");
-        System.out.println("========================================\n");
-        System.out.println("Credenciales:");
-        System.out.println("  admin / admin123");
-        System.out.println("  usuario1 / usuario123");
-        System.out.println("  usuario2 / usuario123");
-        System.out.println("  chef / usuario123");
-        System.out.println("\n========================================\n");
+        logger.info("========================================");
+        logger.info("USUARIOS LISTOS PARA USAR");
+        logger.info("========================================");
+        logger.info("Credenciales inicializadas (no se muestran contraseñas por seguridad). "
+                + "Configura {} y {} en el entorno para personalizarlas.",
+            AppConstants.ENV_ADMIN_PASSWORD, AppConstants.ENV_DEFAULT_USER_PASSWORD);
+        logger.info("========================================");
     }
 
-    private void actualizarContraseña(String username, String password) {
+    private void actualizarContrasena(String username, String password) {
         usuarioRepository.findByUsername(username).ifPresent(usuario -> {
             String hashedPassword = passwordEncoder.encode(password);
             usuario.setPassword(hashedPassword);
             usuarioRepository.save(usuario);
-            System.out.println("✅ Usuario '" + username + "' actualizado");
+            logger.info("Usuario '{}' actualizado", username);
         });
     }
-}
 
+    private String getPasswordFromEnv(String key) {
+        return java.util.Optional.ofNullable(System.getenv(key)).orElse(DEFAULT_FALLBACK);
+    }
+}

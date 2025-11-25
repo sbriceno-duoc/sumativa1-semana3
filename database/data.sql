@@ -67,14 +67,14 @@ INSERT INTO usuarios_roles (usuario_id, rol_id) VALUES
 
 -- RECETA 1: Paella Valenciana
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion, 
-    ingredientes, instrucciones, foto_url, descripcion, porciones, 
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
+    ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
     'Paella Valenciana',
     'Española',
     'España',
-    'Intermedio',
+    'Media',
     60,
     '- 400g de arroz bomba
 - 1 pollo troceado
@@ -102,7 +102,7 @@ INSERT INTO recetas (
 
 -- RECETA 2: Tacos al Pastor
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -137,7 +137,7 @@ INSERT INTO recetas (
 
 -- RECETA 3: Pasta Carbonara
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -170,14 +170,14 @@ INSERT INTO recetas (
 
 -- RECETA 4: Pad Thai
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
     'Pad Thai',
     'Tailandesa',
     'Tailandia',
-    'Intermedio',
+    'Media',
     25,
     '- 200g de fideos de arroz
 - 200g de camarones
@@ -207,7 +207,7 @@ INSERT INTO recetas (
 
 -- RECETA 5: Ramen Japonés
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -243,7 +243,7 @@ INSERT INTO recetas (
 
 -- RECETA 6: Tiramisú
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -278,7 +278,7 @@ INSERT INTO recetas (
 
 -- RECETA 7: Ceviche Peruano
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -312,7 +312,7 @@ INSERT INTO recetas (
 
 -- RECETA 8: Croissants Franceses
 INSERT INTO recetas (
-    nombre, tipo_cocina, pais_origen, dificultad, tiempo_coccion,
+    nombre, tipo_cocina, pais_origen, dificultad, tiempo_preparacion,
     ingredientes, instrucciones, foto_url, descripcion, porciones,
     popular, reciente
 ) VALUES (
@@ -346,7 +346,31 @@ INSERT INTO recetas (
 );
 
 -- ============================================
--- 5. VERIFICACIÓN DE DATOS INSERTADOS
+-- 5. ASIGNAR RECETAS A USUARIOS
+-- Distribuye las recetas entre los usuarios registrados
+-- ============================================
+
+-- Usuario 2 (usuario1): Recetas 1, 4, 7
+UPDATE recetas SET usuario_id = 2 WHERE id IN (1, 4, 7);
+
+-- Usuario 3 (usuario2): Recetas 2, 5, 8
+UPDATE recetas SET usuario_id = 3 WHERE id IN (2, 5, 8);
+
+-- Usuario 4 (chef): Recetas 3, 6
+UPDATE recetas SET usuario_id = 4 WHERE id IN (3, 6);
+
+-- ============================================
+-- 6. MIGRAR DATOS A RECETAS_MEDIA
+-- Copia las fotos existentes a la tabla de multimedia
+-- ============================================
+
+INSERT INTO recetas_media (receta_id, media_url, media_type, orden)
+SELECT id, foto_url, 'image', 0
+FROM recetas
+WHERE foto_url IS NOT NULL AND foto_url != '';
+
+-- ============================================
+-- 7. VERIFICACIÓN DE DATOS INSERTADOS
 -- ============================================
 
 SELECT 'Datos insertados exitosamente' AS Mensaje;
@@ -356,10 +380,12 @@ SELECT 'Roles:' AS Tabla, COUNT(*) AS Total FROM roles
 UNION ALL
 SELECT 'Usuarios:', COUNT(*) FROM usuarios
 UNION ALL
-SELECT 'Recetas:', COUNT(*) FROM recetas;
+SELECT 'Recetas:', COUNT(*) FROM recetas
+UNION ALL
+SELECT 'Recetas Media:', COUNT(*) FROM recetas_media;
 
 SELECT '=== USUARIOS Y CONTRASEÑAS DE PRUEBA ===' AS Info;
-SELECT 
+SELECT
     'Usuario' AS Campo,
     'Contraseña' AS Valor
 UNION ALL
@@ -370,4 +396,14 @@ UNION ALL
 SELECT 'usuario2', 'usuario456'
 UNION ALL
 SELECT 'chef', 'chef2025';
+
+SELECT '=== RECETAS ASIGNADAS A USUARIOS ===' AS Info;
+SELECT
+    r.id AS receta_id,
+    r.nombre AS receta_nombre,
+    u.username AS usuario,
+    u.nombre_completo AS nombre_usuario
+FROM recetas r
+LEFT JOIN usuarios u ON r.usuario_id = u.id
+ORDER BY r.id;
 
